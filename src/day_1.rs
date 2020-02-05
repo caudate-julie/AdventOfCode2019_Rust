@@ -2,7 +2,7 @@
 
 use std::io;
 
-pub fn task_A(xs: &Vec<i32>) -> i32 {
+fn task_A(xs: &Vec<i32>) -> i32 {
     let mut answer = 0;
     for x in xs {
         answer += x / 3 - 2;
@@ -10,7 +10,7 @@ pub fn task_A(xs: &Vec<i32>) -> i32 {
     answer
 }
 
-pub fn task_B(xs: &Vec<i32>) -> i32 {
+fn task_B(xs: &Vec<i32>) -> i32 {
     let mut answer = 0;
     for x in xs {
         let mut a : i32 = *x;
@@ -23,7 +23,7 @@ pub fn task_B(xs: &Vec<i32>) -> i32 {
     answer
 }
 
-pub fn read_data() -> Vec<i32> {
+fn read_data() -> Vec<i32> {
     let mut xs = Vec::new();
     loop {
         let mut weight = String::new();
@@ -33,4 +33,11 @@ pub fn read_data() -> Vec<i32> {
         xs.push(a);
     }
     xs
+}
+
+pub fn solve() {
+    let xs = read_data();
+
+    println!("Task A: {}", task_A(&xs));
+    println!("Task B: {}", task_B(&xs));
 }
