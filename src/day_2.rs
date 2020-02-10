@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 use std::io;
+use crate::intcode::run;
 
 fn read_data() -> Vec<i32> {
     let mut s = String::new();
@@ -20,28 +21,8 @@ fn task_A(mut intcode: Vec<i32>, noun: i32, verb: i32) -> i32 {
     intcode[1] = noun;
     intcode[2] = verb;
 
-    let mut pointer = 0;
-    loop {
-        let opcode = intcode[pointer];
-        match opcode {
-            99 => return intcode[0],
-            1 => {
-                let op1 = intcode[pointer + 1] as usize;
-                let op2 = intcode[pointer + 2] as usize;
-                let res = intcode[pointer + 3] as usize;
-                intcode[res] = intcode[op1] + intcode[op2];
-                pointer += 4;
-            }
-            2 => {
-                let op1 = intcode[pointer + 1] as usize;
-                let op2 = intcode[pointer + 2] as usize;
-                let res = intcode[pointer + 3] as usize;
-                intcode[res] = intcode[op1] * intcode[op2];
-                pointer += 4;
-            }
-            _ => panic!("{}", opcode),
-        }
-    }
+    run(&mut intcode, 0);
+    intcode[0]
 }
 
 
