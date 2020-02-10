@@ -62,23 +62,29 @@ fn task_AB(lo: i32, hi: i32) -> (i32, i32) {
 
 // ============== TESTS ======================
 
-#[test]
-fn test_non_decreasing() {
-    assert!(non_decreasing(&to_digits(123455)));
-    assert!(!non_decreasing(&to_digits(123454)));
-}
+#[cfg(test)]
+mod tests
+{
+    use super::*;
 
-#[test]
-fn test_dubs() {
-    assert!(dubs(&to_digits(111111)));
-    assert!(dubs(&to_digits(113355)));
-    assert!(!dubs(&to_digits(121212)));
-}
+    #[test]
+    fn test_non_decreasing() {
+        assert!(non_decreasing(&to_digits(123455)));
+        assert!(!non_decreasing(&to_digits(123454)));
+    }
 
-#[test]
-fn test_exact_dubs() {
-    assert!(exact_dubs(&to_digits(112233)));
-    assert!(!exact_dubs(&to_digits(121212)));
-    assert!(!exact_dubs(&to_digits(111444)));
-    assert!(exact_dubs(&to_digits(111144)));
+    #[test]
+    fn test_dubs() {
+        assert!(dubs(&to_digits(111111)));
+        assert!(dubs(&to_digits(113355)));
+        assert!(!dubs(&to_digits(121212)));
+    }
+
+    #[test]
+    fn test_exact_dubs() {
+        assert!(exact_dubs(&to_digits(112233)));
+        assert!(!exact_dubs(&to_digits(121212)));
+        assert!(!exact_dubs(&to_digits(111444)));
+        assert!(exact_dubs(&to_digits(111144)));
+    }
 }
