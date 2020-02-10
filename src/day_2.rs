@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use std::io;
-use crate::intcode::run;
+use crate::intcode::Intcode;
 
 fn read_data() -> Vec<i32> {
     let mut s = String::new();
@@ -17,16 +17,16 @@ fn read_data() -> Vec<i32> {
 }
 
 
-fn task_A(mut intcode: Vec<i32>, noun: i32, verb: i32) -> i32 {
-    intcode[1] = noun;
-    intcode[2] = verb;
+fn task_A(mut intcode: Intcode, noun: i32, verb: i32) -> i32 {
+    intcode.code[1] = noun;
+    intcode.code[2] = verb;
 
-    run(&mut intcode, 0);
-    intcode[0]
+    intcode.run();
+    intcode.code[0]
 }
 
 
-fn task_B(intcode: Vec<i32>, target: i32) -> i32 {
+fn task_B(intcode: Intcode, target: i32) -> i32 {
     for noun in 1..100 {
         for verb in 1..100 {
             if task_A(intcode.clone(), noun, verb) == target {
@@ -34,12 +34,12 @@ fn task_B(intcode: Vec<i32>, target: i32) -> i32 {
             }
         }
     }
-    panic!();
+    panic!("solution not found");
 }
-
 
 pub fn solve() {
     let xs = read_data();
-    println!("Task A: {}", task_A(xs.clone(), 12, 2));
-    println!("Task B: {}", task_B(xs, 19690720));
+    let intcode = Intcode::blackbox(xs);
+    println!("Task A: {}", task_A(intcode.clone(), 12, 2));
+    println!("Task B: {}", task_B(intcode, 19690720));
 }
