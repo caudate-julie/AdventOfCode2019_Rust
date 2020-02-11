@@ -1,3 +1,5 @@
+use std::io::Read;
+
 #[derive(Clone)]
 pub struct Intcode {
     pub code: Vec<i32>,
@@ -7,6 +9,17 @@ pub struct Intcode {
 }
 
 impl Intcode {
+    pub fn parse_string(data: &str) -> Vec<i32> {
+        data.split(",").map(|x| x.trim().parse().unwrap()).collect()
+    }
+
+    pub fn parse_file(filename: &str) -> Vec<i32> {
+        let mut file = std::fs::File::open(filename).unwrap();
+        let mut data = String::new();
+        file.read_to_string(&mut data).unwrap();
+        Intcode::parse_string(&data)
+    }
+
     pub fn blackbox(code: Vec<i32>) -> Intcode {
         Intcode {
             code,

@@ -2,15 +2,10 @@
 #![allow(dead_code)]
 
 use crate::intcode::Intcode;
-use std::fs::File;
-use std::io::Read;
 
 pub fn solve() {
-    let mut file = File::open("inputs/day_5.txt").unwrap();
-    let mut data = String::new();
-    file.read_to_string(&mut data).unwrap();
-    let code: Vec<i32> = data.split(",").map(|x| x.trim().parse().unwrap()).collect();
-
+    let code: Vec<i32> = Intcode::parse_file("inputs/day_5.txt");
+    
     println!("Task A: {}", task_AB(code.clone(), 1));
     println!("Task B: {}", task_AB(code, 5));
 }
