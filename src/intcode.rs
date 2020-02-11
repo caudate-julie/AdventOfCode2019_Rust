@@ -16,8 +16,8 @@ impl Intcode {
         }
     }
 
-    pub fn machine(code: Vec<i32>, input: Vec<i32>, output: Vec<i32>) -> Intcode {
-        Intcode { code, input, output, pointer: 0 }
+    pub fn machine(code: Vec<i32>, input: Vec<i32>) -> Intcode {
+        Intcode { code, input, output: Vec::new(), pointer: 0 }
     }
 
     fn operand(&self, offset: usize, operand: i32) -> i32 {
@@ -39,16 +39,27 @@ impl Intcode {
                 1 => {   // addition
                     let op1 = self.operand(1, inst);
                     let op2 = self.operand(2, inst);
-                    let res = self.code[self.pointer + 3] as usize;
-                    self.code[res] = op1 + op2;
+                    let dst = self.code[self.pointer + 3] as usize;
+                    self.code[dst] = op1 + op2;
                     self.pointer += 4;
                 }
                 2 => {   // multiplication
                     let op1 = self.operand(1, inst);
                     let op2 = self.operand(2, inst);
-                    let res = self.code[self.pointer + 3] as usize;
-                    self.code[res] = op1 * op2;
+                    let dst = self.code[self.pointer + 3] as usize;
+                    self.code[dst] = op1 * op2;
                     self.pointer += 4;
+                }
+                3 => {
+                    let dst = self.code[self.pointer + 3] as usize;
+                    let inp = self.input.remove(0);
+                    self.code[dst] = inp;
+                    self.pointer += 2;
+                }
+                4 => {
+                    let op1 = self.operand(1, inst);
+                    self.output.push(op1);
+                    self.pointer += 2;
                 }
                 _ => panic!("wrong opcode: {}", opcode),
             }
