@@ -13,6 +13,7 @@ pub struct Intcode {
     pub input: Vec<i32>,
     pub output: Vec<i32>,
     pointer: usize,
+    relative_base: i32,
 }
 
 impl Intcode {
@@ -33,21 +34,40 @@ impl Intcode {
             input: Vec::new(),
             output: Vec::new(),
             pointer: 0,
+            relative_base: 0,
         }
     }
 
     pub fn machine(code: Vec<i32>, input: Vec<i32>) -> Intcode {
-        Intcode { code, input, output: Vec::new(), pointer: 0 }
+        Intcode { code, input, output: Vec::new(), pointer: 0, relative_base: 0 }
     }
 
-    fn operand(&self, offset: usize, operand: i32) -> i32 {
-        let mode = (operand / 10_i32.pow((offset + 1) as u32)) % 10;
+    fn rvalue(&self, offset: usize) -> i32 {
+        let inst = self.code[self.pointer];
+        let mode = (inst / 10_i32.pow((offset + 1) as u32)) % 10;
         let op = self.code[self.pointer + offset];
-        match mode {
-            0 => self.code[op as usize],
-            1 => op,
+        let addr = match mode {
+            0 => op,
+            1 => return op,
+            2 => op + self.relative_base,
             _ => panic!("wrong mode: {}", mode)
+        } as usize;
+        if addr >= self.code.len() { 0 } else { self.code[addr] }
+    }
+
+    fn lvalue(&mut self, offset: usize) -> &mut i32 {
+        let inst = self.code[self.pointer];
+        let mode = (inst / 10_i32.pow((offset + 1) as u32)) % 10;
+        let op = self.code[self.pointer + offset];
+        let addr = match mode {
+            0 => op,
+            2 => op + self.relative_base,
+            _ => panic!("wrong mode: {}", mode)
+        } as usize;
+        if addr >= self.code.len() {
+            self.code.resize(addr + 1, 0);
         }
+        &mut self.code[addr]
     }
 
     pub fn run(&mut self) -> MachineState {
@@ -59,58 +79,63 @@ impl Intcode {
                     return MachineState::Halt;
                 }
                 1 => {   // addition
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst);
-                    let dst = self.code[self.pointer + 3] as usize;
-                    self.code[dst] = op1 + op2;
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2);
+                    let dst = self.lvalue(3);
+                    *dst = op1 + op2;
                     self.pointer += 4;
                 }
                 2 => {   // multiplication
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst);
-                    let dst = self.code[self.pointer + 3] as usize;
-                    self.code[dst] = op1 * op2;
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2);
+                    let dst = self.lvalue(3);
+                    *dst = op1 * op2;
                     self.pointer += 4;
                 }
                 3 => {   // input
                     if self.input.is_empty() {
                         return MachineState::Waiting;
                     }
-                    let dst = self.code[self.pointer + 1] as usize;
                     let inp = self.input.remove(0);
-                    self.code[dst] = inp;
+                    let dst = self.lvalue(1);
+                    *dst = inp;
                     self.pointer += 2;
                 }
                 4 => {   // output
-                    let op1 = self.operand(1, inst);
+                    let op1 = self.rvalue(1);
                     self.output.push(op1);
                     self.pointer += 2;
                 }
                 5 => {   // jump if true
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst) as usize;
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2) as usize;
                     if op1 != 0 { self.pointer = op2; }
                     else        { self.pointer += 3; }
                 }
                 6 => {   // jump if false
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst) as usize;
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2) as usize;
                     if op1 == 0 { self.pointer = op2; }
                     else        { self.pointer += 3; }
                 }
                 7 => {   // less than
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst);
-                    let dst = self.code[self.pointer + 3] as usize;
-                    self.code[dst] = if op1 < op2 { 1 } else { 0 };
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2);
+                    let dst = self.lvalue(3);
+                    *dst = if op1 < op2 { 1 } else { 0 };
                     self.pointer += 4;
                 }
                 8 => {   // equals
-                    let op1 = self.operand(1, inst);
-                    let op2 = self.operand(2, inst);
-                    let dst = self.code[self.pointer + 3] as usize;
-                    self.code[dst] = if op1 == op2 { 1 } else { 0 };
+                    let op1 = self.rvalue(1);
+                    let op2 = self.rvalue(2);
+                    let dst = self.lvalue(3);
+                    *dst = if op1 == op2 { 1 } else { 0 };
                     self.pointer += 4;
+                }
+                9 => {  // adjust relative base
+                    let op1 = self.rvalue(1);
+                    self.relative_base += op1;
+                    self.pointer += 2;
                 }
                 _ => panic!("wrong opcode: {}", opcode),
             }
@@ -193,5 +218,12 @@ mod tests
             &[42],
             &[1001],
         );
+    }
+
+    #[test]
+    fn test_quine_day_9() {
+        compare_output(&[109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99],
+                       &[],
+                       &[109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]);
     }
 }
