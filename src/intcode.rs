@@ -1,6 +1,13 @@
 use std::io::Read;
 
 #[derive(Clone)]
+#[derive(PartialEq)]
+pub enum MachineState {
+    Waiting,
+    Halt,
+}
+
+#[derive(Clone)]
 pub struct Intcode {
     pub code: Vec<i32>,
     pub input: Vec<i32>,
@@ -43,12 +50,14 @@ impl Intcode {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> MachineState {
         loop {
             let inst = self.code[self.pointer];
             let opcode = inst % 100;
             match opcode {
-                99 => return,
+                99 => {
+                    return MachineState::Halt;
+                }
                 1 => {   // addition
                     let op1 = self.operand(1, inst);
                     let op2 = self.operand(2, inst);
@@ -64,6 +73,9 @@ impl Intcode {
                     self.pointer += 4;
                 }
                 3 => {   // input
+                    if self.input.is_empty() {
+                        return MachineState::Waiting;
+                    }
                     let dst = self.code[self.pointer + 1] as usize;
                     let inp = self.input.remove(0);
                     self.code[dst] = inp;
