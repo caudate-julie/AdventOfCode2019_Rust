@@ -3,6 +3,7 @@
 
 use crate::intcode::Intcode;
 use crate::intcode::MachineState;
+use crate::intcode::long;
 
 pub fn solve() {
     let code = Intcode::parse_file("inputs/day_7.txt");
@@ -10,20 +11,20 @@ pub fn solve() {
     println!("Task B: {}", task_B(&code));
 }
 
-fn task_A(code: &[i32]) -> i32 {
+fn task_A(code: &[long]) -> long {
     try_amplification(code, &mut vec![0,1,2,3,4], &mut vec![])
 }
 
-fn task_B(code: &[i32]) -> i32 {
+fn task_B(code: &[long]) -> long {
     try_amplification(code, &mut vec![5,6,7,8,9], &mut vec![])
 }
 
-fn try_amplification(code: &[i32], phases: &mut Vec<i32>, config: &mut Vec<i32>) -> i32 {
+fn try_amplification(code: &[long], phases: &mut Vec<long>, config: &mut Vec<long>) -> long {
     if phases.is_empty() {
         return try_configuration(code, &config);
     }
 
-    let mut max_signal = i32::min_value();
+    let mut max_signal = long::min_value();
     for _ in 0..phases.len() {
         config.push(phases.remove(0));
 
@@ -35,7 +36,7 @@ fn try_amplification(code: &[i32], phases: &mut Vec<i32>, config: &mut Vec<i32>)
     max_signal
 }
 
-fn try_configuration(code: &[i32], config: &[i32]) -> i32 {
+fn try_configuration(code: &[long], config: &[long]) -> long {
     let mut machines: Vec<Intcode> = Vec::new();
     for phase in config {
         machines.push(Intcode::machine(code.to_vec(), vec![*phase]));

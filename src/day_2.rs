@@ -2,8 +2,9 @@
 #![allow(dead_code)]
 
 use crate::intcode::Intcode;
+use crate::intcode::long;
 
-fn task_A(mut intcode: Intcode, noun: i32, verb: i32) -> i32 {
+fn task_A(mut intcode: Intcode, noun: long, verb: long) -> long {
     intcode.code[1] = noun;
     intcode.code[2] = verb;
 
@@ -11,7 +12,7 @@ fn task_A(mut intcode: Intcode, noun: i32, verb: i32) -> i32 {
     intcode.code[0]
 }
 
-fn task_B(intcode: Intcode, target: i32) -> i32 {
+fn task_B(intcode: Intcode, target: long) -> long {
     for noun in 1..100 {
         for verb in 1..100 {
             if task_A(intcode.clone(), noun, verb) == target {

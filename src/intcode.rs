@@ -1,5 +1,8 @@
 use std::io::Read;
 
+#[allow(non_camel_case_types)]
+pub type long = i64;
+
 #[derive(Clone)]
 #[derive(PartialEq)]
 pub enum MachineState {
@@ -9,26 +12,26 @@ pub enum MachineState {
 
 #[derive(Clone)]
 pub struct Intcode {
-    pub code: Vec<i32>,
-    pub input: Vec<i32>,
-    pub output: Vec<i32>,
+    pub code: Vec<long>,
+    pub input: Vec<long>,
+    pub output: Vec<long>,
     pointer: usize,
-    relative_base: i32,
+    relative_base: long,
 }
 
 impl Intcode {
-    pub fn parse_string(data: &str) -> Vec<i32> {
+    pub fn parse_string(data: &str) -> Vec<long> {
         data.split(",").map(|x| x.trim().parse().unwrap()).collect()
     }
 
-    pub fn parse_file(filename: &str) -> Vec<i32> {
+    pub fn parse_file(filename: &str) -> Vec<long> {
         let mut file = std::fs::File::open(filename).unwrap();
         let mut data = String::new();
         file.read_to_string(&mut data).unwrap();
         Intcode::parse_string(&data)
     }
 
-    pub fn blackbox(code: Vec<i32>) -> Intcode {
+    pub fn blackbox(code: Vec<long>) -> Intcode {
         Intcode {
             code,
             input: Vec::new(),
@@ -38,13 +41,13 @@ impl Intcode {
         }
     }
 
-    pub fn machine(code: Vec<i32>, input: Vec<i32>) -> Intcode {
+    pub fn machine(code: Vec<long>, input: Vec<long>) -> Intcode {
         Intcode { code, input, output: Vec::new(), pointer: 0, relative_base: 0 }
     }
 
-    fn rvalue(&self, offset: usize) -> i32 {
+    fn rvalue(&self, offset: usize) -> long {
         let inst = self.code[self.pointer];
-        let mode = (inst / 10_i32.pow((offset + 1) as u32)) % 10;
+        let mode = (inst / long::pow(10, (offset + 1) as u32)) % 10;
         let op = self.code[self.pointer + offset];
         let addr = match mode {
             0 => op,
@@ -55,9 +58,9 @@ impl Intcode {
         if addr >= self.code.len() { 0 } else { self.code[addr] }
     }
 
-    fn lvalue(&mut self, offset: usize) -> &mut i32 {
+    fn lvalue(&mut self, offset: usize) -> &mut long {
         let inst = self.code[self.pointer];
-        let mode = (inst / 10_i32.pow((offset + 1) as u32)) % 10;
+        let mode = (inst / long::pow(10, (offset + 1) as u32)) % 10;
         let op = self.code[self.pointer + offset];
         let addr = match mode {
             0 => op,
@@ -150,7 +153,7 @@ mod tests
 {
     use super::*;
 
-    fn compare_codes(initial: &[i32], expected: &[i32]) {
+    fn compare_codes(initial: &[long], expected: &[long]) {
         let mut intcode = Intcode::blackbox(initial.to_owned());
         intcode.run();
         assert!(&intcode.code[..] == expected);
@@ -164,7 +167,7 @@ mod tests
         compare_codes(&[1,1,1,4,99,5,6,0,99], &[30,1,1,4,2,5,6,0,99]);
     }
 
-    fn compare_output(code: &[i32], input: &[i32], expected: &[i32]) {
+    fn compare_output(code: &[long], input: &[long], expected: &[long]) {
         let mut intcode = Intcode::machine(code.to_owned(), input.to_owned());
         intcode.run();
         assert!(&intcode.output[..] == expected);
@@ -221,9 +224,12 @@ mod tests
     }
 
     #[test]
-    fn test_quine_day_9() {
+    fn test_day_9() {
         compare_output(&[109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99],
                        &[],
                        &[109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]);
+        compare_output(&[104,1125899906842624,99],
+                        &[],
+                        &[1125899906842624]);
     }
 }
