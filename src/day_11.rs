@@ -21,14 +21,14 @@ fn task_A(code: &[long]) -> long {
 
 fn task_B(code: &[long]) {
     let painting = hull_painting_robot(code, 1);
-    let min_x = painting.keys().min_by_key(|x| x.0).unwrap().0 as usize;
-    let min_y = painting.keys().min_by_key(|x| x.1).unwrap().1 as usize;
-    let max_x = painting.keys().max_by_key(|x| x.0).unwrap().0 as usize;
-    let max_y = painting.keys().max_by_key(|x| x.1).unwrap().1 as usize;
+    let min_x = painting.keys().map(|x| x.0).min().unwrap();
+    let min_y = painting.keys().map(|x| x.1).min().unwrap();
+    let max_x = painting.keys().map(|x| x.0).max().unwrap();
+    let max_y = painting.keys().map(|x| x.1).max().unwrap();
 
-    let mut canvas: Vec<Vec<long>> = vec![vec![0; max_x - min_x + 1]; max_y - min_y + 1];
+    let mut canvas: Vec<Vec<long>> = vec![vec![0; (max_x - min_x + 1) as usize]; (max_y - min_y + 1) as usize];
     for k in painting.keys() {
-        canvas[k.1 as usize - min_x][k.0 as usize - min_y] = painting[k];
+        canvas[(k.1 - min_x) as usize][(k.0 - min_y) as usize] = painting[k];
     }
     for i in 0..canvas.len() {
         for j in 0..canvas[i].len() {
