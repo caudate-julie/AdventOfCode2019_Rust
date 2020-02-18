@@ -236,18 +236,18 @@ mod tests {
     #[test]
     fn test_cmp() {
         let coords: Vec<Coord> = vec![
-            Coord { x: 0, y: -2 },
-            Coord { x: 1, y: -3 },
-            Coord { x: 3, y: -1 },
-            Coord { x: 2, y: 0 },
-            Coord { x: 3, y: 1 },
-            Coord { x: 1, y: 3 },
-            Coord { x: 0, y: 2 },
-            Coord { x: -1, y: 3},
-            Coord { x: -3, y: 1 },
-            Coord { x: -2, y: 0 },
-            Coord { x: -3, y: -1 },
-            Coord { x: -1, y: -3 },
+            Coord { x: 0, y: -2, z: 0 },
+            Coord { x: 1, y: -3, z: 0 },
+            Coord { x: 3, y: -1, z: 0 },
+            Coord { x: 2, y: 0, z: 0 },
+            Coord { x: 3, y: 1, z: 0 },
+            Coord { x: 1, y: 3, z: 0 },
+            Coord { x: 0, y: 2, z: 0 },
+            Coord { x: -1, y: 3, z: 0 },
+            Coord { x: -3, y: 1, z: 0 },
+            Coord { x: -2, y: 0, z: 0 },
+            Coord { x: -3, y: -1, z: 0 },
+            Coord { x: -1, y: -3, z: 0 },
         ];
         for (i, a) in coords.iter().enumerate() {
             for (j, b) in coords.iter().enumerate() {
@@ -265,14 +265,14 @@ mod tests {
             "..#.....X...###..",
             "..#.#.....#....##",
         ];
-        let center = Coord {x: 8, y: 3};
-        assert!(task_B(&map, center, 1) == Coord {x: 8, y: 1});
-        assert!(task_B(&map, center, 17) == Coord {x: 10, y: 4});
-        assert!(task_B(&map, center, 30) == Coord {x: 7, y: 0});
-        assert!(task_B(&map, center, 31) == Coord {x: 8, y: 0});
-        assert!(task_B(&map, center, 31) == Coord {x: 8, y: 0});
-        assert!(task_B(&map, center, 34) == Coord {x: 16, y: 1});
-        assert!(task_B(&map, center, 36) == Coord {x: 14, y: 3});
+        let center = Coord {x: 8, y: 3, z: 0};
+        assert!(task_B(&map, center, 1) == Coord {x: 8, y: 1, z: 0});
+        assert!(task_B(&map, center, 17) == Coord {x: 10, y: 4, z: 0});
+        assert!(task_B(&map, center, 30) == Coord {x: 7, y: 0, z: 0});
+        assert!(task_B(&map, center, 31) == Coord {x: 8, y: 0, z: 0});
+        assert!(task_B(&map, center, 31) == Coord {x: 8, y: 0, z: 0});
+        assert!(task_B(&map, center, 34) == Coord {x: 16, y: 1, z: 0});
+        assert!(task_B(&map, center, 36) == Coord {x: 14, y: 3, z: 0});
     }
 
     #[test]
@@ -299,17 +299,17 @@ mod tests {
             "#.#.#.#####.####.###",
             "###.##.####.##.#..##",
         ];
-        let center = Coord {x: 11, y: 13};
-        assert!(task_B(&map, center, 1) == Coord {x: 11, y: 12});
-        assert!(task_B(&map, center, 2) == Coord {x: 12, y: 1});
-        assert!(task_B(&map, center, 3) == Coord {x: 12, y: 2});
-        assert!(task_B(&map, center, 10) == Coord {x: 12, y: 8});
-        assert!(task_B(&map, center, 20) == Coord {x: 16, y: 0});
-        assert!(task_B(&map, center, 50) == Coord {x: 16, y: 9});
-        assert!(task_B(&map, center, 100) == Coord {x: 10, y: 16});
-        assert!(task_B(&map, center, 199) == Coord {x: 9, y: 6});
-        assert!(task_B(&map, center, 200) == Coord {x: 8, y: 2});
-        assert!(task_B(&map, center, 201) == Coord {x: 10, y: 9});
-        assert!(task_B(&map, center, 299) == Coord {x: 11, y: 1});
+        let center = Coord {x: 11, y: 13, z: 0};
+        assert!(task_B(&map, center, 1) == Coord {x: 11, y: 12, z: 0});
+        assert!(task_B(&map, center, 2) == Coord {x: 12, y: 1, z: 0});
+        assert!(task_B(&map, center, 3) == Coord {x: 12, y: 2, z: 0});
+        assert!(task_B(&map, center, 10) == Coord {x: 12, y: 8, z: 0});
+        assert!(task_B(&map, center, 20) == Coord {x: 16, y: 0, z: 0});
+        assert!(task_B(&map, center, 50) == Coord {x: 16, y: 9, z: 0});
+        assert!(task_B(&map, center, 100) == Coord {x: 10, y: 16, z: 0});
+        assert!(task_B(&map, center, 199) == Coord {x: 9, y: 6, z: 0});
+        assert!(task_B(&map, center, 200) == Coord {x: 8, y: 2, z: 0});
+        assert!(task_B(&map, center, 201) == Coord {x: 10, y: 9, z: 0});
+        assert!(task_B(&map, center, 299) == Coord {x: 11, y: 1, z: 0});
     }
 }
