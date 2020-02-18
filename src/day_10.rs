@@ -6,7 +6,8 @@ use std::io::Read;
 use std::cmp::Ordering;
 use std::cmp::PartialOrd;
 use std::collections::HashMap;
-use std::ops;
+
+use crate::coords::Coord;
 
 pub fn solve() {
     let mut file = File::open("inputs/day_10.txt").unwrap();
@@ -27,48 +28,10 @@ fn gcd(a: i32, b: i32) -> i32 {
     if b == 0 { a } else { gcd(b, a % b) }
 }
 
-#[derive(PartialEq, Eq)]
-#[derive(Clone, Copy)]
-#[derive(Hash)]
-#[derive(Debug)]
-struct Coord {
-    x: i32,
-    y: i32,
-}
-
-impl ops::Add for Coord {
-    type Output = Coord;
-    fn add(self, other: Coord) -> Coord {
-        Coord { x: self.x + other.x, y: self.y + other.y }
-    }
-}
-
-impl ops::Sub for Coord {
-    type Output = Coord;
-    fn sub(self, other: Coord) -> Coord {
-        Coord { x: self.x - other.x, y: self.y - other.y }
-    }
-}
-
-impl ops::Mul<i32> for Coord {
-    type Output = Coord;
-    fn mul(self, other: i32) -> Coord {
-        Coord { x: self.x * other, y: self.y * other }
-    }
-}
-
-impl ops::Div<i32> for Coord {
-    type Output = Coord;
-    fn div(self, other: i32) -> Coord {
-        assert!(other != 0 && self.x % other == 0 && self.y % other == 0);
-        Coord { x: self.x / other, y: self.y / other }
-    }
-}
-
 impl Ord for Coord {
     fn cmp(&self, other: &Coord) -> Ordering {
-        let Coord { x: ax, y: ay } = *self;
-        let Coord { x: bx, y: by } = *other;
+        let Coord { x: ax, y: ay, z: _ } = *self;
+        let Coord { x: bx, y: by, z: _ } = *other;
 
         if ax == 0 && bx == 0 && ay < 0 && by < 0 { return Ordering::Equal; }
         if ax == 0 && ay < 0 { return Ordering::Less; }
@@ -106,8 +69,8 @@ impl Coord {
         *self / self.gcd()
     }
 
-    fn new(i: i32, j: i32) -> Coord {
-        Coord { x: j, y: i }
+    fn from_table(i: i32, j: i32) -> Coord {
+        Coord { x: j, y: i, z: 0 }
     }
 }
 
@@ -133,19 +96,19 @@ fn is_visible(map: &[&str], a: Coord, b: Coord) -> bool {
 
 fn task_A(map: &[&str]) -> (i32, Coord) {
     let mut max = 0;
-    let mut coord = Coord::new(0, 0);
+    let mut coord = Coord::from_table(0, 0);
     let height = map.len() as i32;
     let width = map[0].len() as i32;
 
     for i in 0..height {
         for j in 0..width {
-            let current = Coord::new(i, j);
+            let current = Coord::from_table(i, j);
             if get(map, current) == b'.' { continue; }
             
             let mut count = -1;
             for ii in 0..height {
                 for jj in 0..width {
-                    let observed = Coord::new(ii, jj);
+                    let observed = Coord::from_table(ii, jj);
                     if get(map, observed) == b'.' { continue; }
                     if is_visible(map, current, observed) {
                         count += 1;
@@ -168,7 +131,7 @@ fn get_asteroid_list(map: &[&str], center: Coord) -> Vec<Coord> {
 
     for i in 0..height {
         for j in 0..width {
-            let c = Coord::new(i, j);
+            let c = Coord::from_table(i, j);
             if get(map, c) == b'#' {
                 asts.push(c - center);
             }
@@ -181,7 +144,7 @@ fn task_B(map: &[&str], center: Coord, target: i32) -> Coord {
     let asteroids = get_asteroid_list(map, center);
     let mut coords: HashMap<Coord, Vec<Coord>> = HashMap::new();
     for asteroid in asteroids {
-        if asteroid == Coord::new(0, 0) { continue; }
+        if asteroid == Coord::from_table(0, 0) { continue; }
         let a = asteroid.angle();
         coords.entry(a).or_default().push(asteroid);
     }
@@ -225,7 +188,7 @@ mod tests {
     #[test]
     fn test_task_A() {
         let map = [".#..#", ".....", "#####", "....#", "...##"];
-        assert!(task_A(&map) == (8, Coord::new(4, 3)));
+        assert!(task_A(&map) == (8, Coord::from_table(4, 3)));
 
         let map = [
             "......#.#.",
@@ -239,7 +202,7 @@ mod tests {
             "##...#..#.",
             ".#....####",
         ];
-        assert!(task_A(&map) == (33, Coord::new(8, 5)));
+        assert!(task_A(&map) == (33, Coord::from_table(8, 5)));
 
         let map = [
             "#.#...#.#.",
@@ -253,7 +216,7 @@ mod tests {
             "......#...",
             ".####.###.",
         ];
-        assert!(task_A(&map) == (35, Coord::new(2, 1)));
+        assert!(task_A(&map) == (35, Coord::from_table(2, 1)));
 
         let map = [
             ".#..#..###",
@@ -267,7 +230,7 @@ mod tests {
             ".##...##.#",
             ".....#.#..",
         ];
-        assert!(task_A(&map) == (41, Coord::new(3, 6)));
+        assert!(task_A(&map) == (41, Coord::from_table(3, 6)));
     }
 
     #[test]
