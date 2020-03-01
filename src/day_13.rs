@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
-#![allow(dead_code)]
-#![allow(deprecated)]    // external deprecations in crossterm crate
+// #![allow(dead_code)]
 
 use std::{thread, time};
 use std::io::Write;
@@ -22,7 +21,7 @@ const BALL: long = 4;
 
 pub fn solve() {
     let mut code = Intcode::parse_file("inputs/day_13.txt");
-    println!("Task A: {}", task_A(&code));
+    // println!("Task A: {}", task_A(&code));
     code[0] = 2;
     task_B(&code);
 }
@@ -39,7 +38,7 @@ struct Game {
 impl Game {
     fn new(width: usize, height: usize) -> Game {
         Game {
-            grid: vec![vec![0; width]; height],
+            grid: vec![vec![-1; width]; height],
             ball_x: 0,
             paddle_x: 0,
             score: 0,
@@ -49,6 +48,29 @@ impl Game {
 
     fn set(&mut self, i: long, j: long, value: long) {
         self.grid[i as usize][j as usize] = value;
+    }
+
+    fn show_tile(&mut self, i: long, j: long, value: long) {
+        // if self.grid[i as usize][j as usize] == value { return };
+
+        let x = match value {
+            EMPTY  => style::style('.').with(Color::DarkGrey),
+            WALL   => style::style('#').with(Color::White),
+            BLOCK  => style::style('%').with(Color::Yellow),
+            PADDLE => style::style('=').with(Color::Blue),
+            BALL   => style::style('o').with(Color::Red),
+            _ => panic!("...at ({}, {})", i, j),
+        };
+
+        queue!(self.stdout,
+                cursor::MoveTo(2 * j as u16, i as u16),
+                style::PrintStyledContent(x)).unwrap();
+    }
+
+    fn show_score(&mut self) {
+        queue!(self.stdout, 
+            cursor::MoveTo(0, self.grid.len() as u16 + 1),
+            style::Print(self.score)).unwrap();
     }
 
     fn show(&mut self) {
@@ -96,9 +118,14 @@ impl Game {
                 BALL   => { self.ball_x = x; }
                 _ => {}
             }
-    
+            
+            self.show_tile(y, x, value);
             self.set(y, x, value);
         }
+
+        self.show_score();
+        // self.show();
+        self.stdout.flush().unwrap();
     }
 }
 
@@ -117,7 +144,7 @@ fn task_A(code: &[long]) -> long {
             if game.grid[i][j] == BLOCK { count += 1; }
         }
     }
-    game.show();
+    // game.show();
     count
 }
 
@@ -133,8 +160,9 @@ fn task_B(code: &[long]) {
         game.update(&intcode.output);
         intcode.input.push((game.ball_x - game.paddle_x).signum());
         thread::sleep(time::Duration::from_millis(20));
-        game.show();
+        // game.show();
 
         if state == MachineState::Halt { break }
     }
+    execute!(game.stdout, cursor::MoveTo(0, 25), cursor::Show).unwrap();
 }
