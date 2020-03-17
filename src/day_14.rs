@@ -43,61 +43,88 @@ fn parse_data(data: &str) -> HashMap<String, Reaction> {
     receipts
 }
 
-fn add_reaction(receipts: &HashMap<String, Reaction>,
-                leftovers: &mut HashMap<String, i64>,
-                target: &Ingredient)
-                -> i64 {
-    let mut needed = target.amount;
-    if target.name == "ORE" { return needed; }
-
-    let stock = leftovers.entry(target.name.clone()).or_insert(0);
-    if needed <= *stock {
-        *stock -= needed;
-        return 0;
+fn TopSort(data: &HashMap<String, Reaction>) -> Vec<String> {
+    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
+    for r in data.values() {
+        for ingr in &r.raw {
+            graph.entry(ingr.name.clone()).or_insert(Vec::new()).push(r.result.name.clone());
+        }
     }
-    needed -= *stock;
-    *stock = 0;
-
-    let receipt = &receipts[&target.name];
-    let react_count = (needed - 1) / receipt.result.amount + 1;
-
-    let mut sum = 0;
-    for x in &receipt.raw {
-        sum += add_reaction(receipts,
-                            leftovers,
-                            &Ingredient { name: x.name.clone(), amount: x.amount * react_count });
+    for r in data.keys() {
+        graph.entry(r.clone()).or_insert(Vec::new());
     }
-    leftovers.insert(target.name.clone(), react_count * receipt.result.amount - needed);
-    sum
+
+    let mut sorted: Vec<String> = Vec::new();
+    while !graph.is_empty() {
+        let mut next: String = String::new();
+        for candidate in graph.keys() {
+            let mut dependent = false;
+            for g in graph.values() {
+                if g.contains(candidate) {
+                    dependent = true;
+                    break;
+                }
+            }
+            if dependent { continue; }
+            next = candidate.clone();
+            break;
+        }
+        assert!(!next.is_empty());
+        graph.remove(&next);
+        sorted.push(next);
+    }
+    sorted.reverse();
+    sorted
 }
+
+fn ore_for_fuel(receipts: &HashMap<String, Reaction>,
+                needs: &mut HashMap<String, i64>,
+                sorted: &[String]) {
+
+    for x in sorted {
+        if !needs.contains_key(x) { continue; }
+        if x == "ORE" { break; }
+        if needs[x] < 0 { continue; }
+
+        let r = &receipts[x];
+        let coeff = (needs[x] - 1) / r.result.amount + 1;
+        for ingr in r.raw.iter() {
+            *needs.entry(ingr.name.clone()).or_insert(0) += coeff * ingr.amount;
+        }
+        *needs.get_mut(x).unwrap() -= r.result.amount * coeff;
+    }
+}
+
 
 fn task_A(receipts: &HashMap<String, Reaction>) -> i64 {
-    let mut leftovers: HashMap<String, i64> = HashMap::new();
-    add_reaction(receipts, &mut leftovers, &Ingredient { name: "FUEL".to_string(), amount: 1 })
+    let sorted = TopSort(receipts);
+    let mut needs: HashMap<String, i64> = HashMap::new();
+    needs.insert("FUEL".to_string(), 1);
+    ore_for_fuel(receipts, &mut needs, &sorted);
+    needs["ORE"]
 }
 
-fn task_B(receipts: &HashMap<String, Reaction>, mut stock: i64) -> i64 {
-    let mut fuel = 0;
-    let mut leftovers: HashMap<String, i64> = HashMap::new();
-    let mut order = Ingredient { name: "FUEL".to_string(), amount: 1 };
+fn task_B(receipts: &HashMap<String, Reaction>, stock: i64) -> i64 {
+    let sorted = TopSort(receipts);
+    let mut needs: HashMap<String, i64> = HashMap::new();
+    needs.insert("ORE".to_string(), -stock);
+    needs.insert("FUEL".to_string(), 0);
 
-    while order.amount > 0 {
-        let mut left_backup = leftovers.clone();
-        let expence = add_reaction(receipts, &mut left_backup, &order);
-        if expence > stock {
-            order.amount /= 2;
+    let mut fuel = 0;
+    let mut attempt = 1;
+
+    while attempt > 0 {
+        let needs_backup = needs.clone();
+        *needs.get_mut("FUEL").unwrap() = attempt;
+        ore_for_fuel(receipts, &mut needs, &sorted);
+        if needs["ORE"] > 0 {
+            needs = needs_backup;
+            attempt /= 2;
             continue;
         }
 
-        fuel += order.amount + *leftovers.entry("FUEL".to_string()).or_insert(0);
-        leftovers.insert("FUEL".to_string(), 0);
-
-        if expence * 3 < stock {
-            order.amount *= 2;
-        }
-
-        stock -= expence;
-        leftovers = left_backup;
+        fuel += attempt - needs["FUEL"];
+        attempt *= 2;
     }
     fuel
 }
